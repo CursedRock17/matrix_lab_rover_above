@@ -1,0 +1,13 @@
+# Depth Anything 3 GPU server — install on the desktop only.
+#
+# PyTorch must be installed SEPARATELY before this file because the correct CUDA index URL
+# depends on your driver version. See the README "Depth Anything 3 GPU Server" section.
+# Do NOT run: pip install torch  (that installs CPU-only and will overwrite your CUDA build)
+#
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+transformers>=4.45.0
+accelerate>=0.30.0
+Pillow>=10.0.0
+numpy
+opencv-python-headless

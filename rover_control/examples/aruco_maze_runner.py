@@ -235,6 +235,7 @@ class ArucoRunner(Rover):
         self.distance_pid.reset()
         self.heading_pid.reset()
         self._last_pid_time = time.perf_counter()
+        _last_known_distance = None  # used to detect "tag went below FOV when very close"
 
         while True:
             # Pull the freshest frame + its capture time, detect (raw), then smooth (what we steer on)
@@ -256,8 +257,16 @@ class ArucoRunner(Rover):
             frame_is_new = (stamp != self._last_frame_stamp)
             self._last_frame_stamp = stamp
 
-            # Lost the tag mid-approach: back out and re-center with a fresh stop-and-stare
+            # Lost the tag mid-approach: if we were already close, the tag likely slipped below the
+            # camera's downward FOV - declare arrived. Otherwise back out and re-center.
             if not seen:
+                if _last_known_distance is not None and _last_known_distance < self.stop_tolerance_m + 0.15:
+                    self.logger.log(phase="drive", event="tag lost near goal -> assumed arrived",
+                                    seen=False, target_id=target_id, distance=_last_known_distance,
+                                    frame_stamp=stamp, frame_age=frame_age, frame_is_new=frame_is_new,
+                                    **self._enc(), **self._lidar())
+                    self.stop()
+                    return "arrived"
                 self.logger.log(phase="drive", event="lost tag", seen=False, target_id=target_id,
                                 frame_stamp=stamp, frame_age=frame_age, frame_is_new=frame_is_new,
                                 **self._enc())
@@ -281,6 +290,8 @@ class ArucoRunner(Rover):
                                 frame_is_new=frame_is_new, **self._enc())
                 self.stop()
                 return "recenter"
+
+            _last_known_distance = position[2]
 
             # Otherwise keep driving toward it with the PID, logging the full tick
             wheel_speeds = self.compute_wheel_speeds(position)

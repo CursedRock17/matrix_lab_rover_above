@@ -107,6 +107,8 @@ class ArucoPoseEstimator:
         corners, ids, _ = self.detector.detectMarkers(gray)
 
         poses = {}
+        good_corners, good_ids = [], []  # only markers that pass the quality gate
+
         if ids is not None and len(ids) > 0:
             for i, marker_id in enumerate(ids.flatten()):
 
@@ -131,6 +133,14 @@ class ArucoPoseEstimator:
                     projected.reshape(4, 2) - corners[i].reshape(4, 2), axis=1
                 )))
                 if reproj_error > self.max_reprojection_error_px:
+                    if self.verbose:
+                        # Draw rejected markers in red so the viewer makes the problem visible
+                        cv2.aruco.drawDetectedMarkers(frame, [corners[i]], np.array([[marker_id]]),
+                                                      borderColor=(0, 0, 255))
+                        cv2.putText(frame,
+                                    f"ID:{marker_id} REJECTED E:{reproj_error:.1f}px",
+                                    (10, 30 + 30 * i),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     continue
 
                 ### Yaw from the rotation, position back in the rover-relative output frame ###
@@ -141,10 +151,11 @@ class ArucoPoseEstimator:
                     "distance": float(np.linalg.norm(tvec)),
                     "reproj_error": reproj_error,
                 }
+                good_corners.append(corners[i])
+                good_ids.append([marker_id])
 
                 ### Optional visualization ###
                 if self.verbose:
-                    cv2.aruco.drawDetectedMarkers(frame, corners, ids)
                     cv2.drawFrameAxes(
                         frame, self.camera_matrix, self.dist_coeffs,
                         rvec, tvec, self.marker_length_m * 0.5
@@ -155,6 +166,10 @@ class ArucoPoseEstimator:
                         (10, 30 + 30 * i),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2
                     )
+
+        # Draw only quality-gate-passing markers in green (rejected ones already drawn in red above)
+        if self.verbose and good_corners:
+            cv2.aruco.drawDetectedMarkers(frame, good_corners, np.array(good_ids))
 
         return (frame if self.verbose else None), poses
 

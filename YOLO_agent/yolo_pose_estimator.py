@@ -17,6 +17,7 @@ from PIL import Image
 from transformers import pipeline
 
 from YOLO_agent.YOLO_extractor import YOLOExtractor
+from YOLO_agent.depth_client import DepthServerClient
 
 # Default camera calibration (same ESP32 numbers the ArUco estimator uses)
 camera_matrix_default = np.array([
@@ -45,6 +46,7 @@ class YOLOPoseEstimator:
         confidence=0.5,
         imgsz=640,
         verbose=False,
+        depth_server_url=None,
     ):
         ### YOLO does the object detection (reuse the class the other examples use) ###
         self.detector = YOLOExtractor(
@@ -60,11 +62,16 @@ class YOLOPoseEstimator:
         self.cx = float(camera_matrix[0, 2])
         self.cy = float(camera_matrix[1, 2])
 
-        ### Use the GPU if there is one, otherwise the CPU ###
-        device = 0 if torch.cuda.is_available() else -1
-
-        ### The depth model returns a distance in meters for every pixel in the image ###
-        self.depth_pipe = pipeline("depth-estimation", model=depth_model, device=device)
+        ### Depth backend: remote GPU server if a URL is given, otherwise local CPU/GPU ###
+        if depth_server_url is not None:
+            self._remote_depth = DepthServerClient(depth_server_url)
+            self.depth_pipe = None
+            print(f"Depth backend: remote server at {depth_server_url}")
+        else:
+            self._remote_depth = None
+            device = 0 if torch.cuda.is_available() else -1
+            self.depth_pipe = pipeline("depth-estimation", model=depth_model, device=device)
+            print(f"Depth backend: local model ({depth_model})")
 
         self.verbose = verbose
 
@@ -76,9 +83,13 @@ class YOLOPoseEstimator:
 
     def _depth_map_meters(self, frame):
         """
-        Run the depth model on one frame and return a meters-per-pixel map the size of the frame.
+        Return a meters-per-pixel depth map the same size as frame.
+        Uses the remote GPU server if one was configured, otherwise runs locally.
         """
-        # The depth model expects an RGB PIL image, OpenCV gives us BGR
+        if self._remote_depth is not None:
+            return self._remote_depth.get_depth(frame)
+
+        # Local path: depth model expects RGB PIL image, OpenCV gives us BGR
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = self.depth_pipe(Image.fromarray(rgb))
 

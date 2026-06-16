@@ -2,19 +2,35 @@
 This folder will showcase all of the higher level, AI-agent code that we'll use with the STEM Rovers
 
 ## Installation
-Access this folder, typically by cloning the repository : TODO: create Git repo
+
+### Prerequisites
+1. Install [Python3](https://www.python.org/downloads/)
+2. Install [Git](https://git-scm.com/install/) on your platform
+3. Install [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) on your desired platform:
+    - [Windows](https://www.anaconda.com/docs/getting-started/miniconda/install/windows-cli-install)
+    - [MacOS](https://www.anaconda.com/docs/getting-started/miniconda/install/mac-cli-install)
+    - [Linux](https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install)
+4. Clone this repository locally:
+
+    ```bash
+    git clone https://github.com/CursedRock17/matrix_lab_rover_above.git
+    ```
+
+### Repository Setup
 
 1) Create a conda environment:
-```bash
-conda create -n rover_high_level python=3.12 
-```
+    ```bash
+    conda create -n rover_high_level python=3.12 
+    ```
+
 2) Activate the environment and install this project (run from this folder):
-```bash
-conda activate rover_high_level
-# On a machine without an NVIDIA GPU, grab the small CPU-only torch first (saves ~6 GB)
-python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-python3 -m pip install -e .
-```
+    ```bash
+    conda activate rover_high_level
+    # On a machine without an NVIDIA GPU, grab the small CPU-only torch first (saves ~6 GB)
+    python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    python3 -m pip install -e .
+    ```
+
 This installs the project's folders (`ArUco_detector`, `YOLO_agent`, `LLM_hybrid`, `rover_control`) as importable Python packages, along with their dependencies (`opencv-contrib-python`, `ultralytics`, `numpy`, `pynput`, `ollama`, `transformers`, `pillow`) listed in `pyproject.toml` and `requirements.txt` — no `PYTHONPATH` setup needed.
 
 3) (Only for the `LLM_hybrid` examples) Install and start the local Ollama server — see [LLM_hybrid/README.md](LLM_hybrid/README.md) for the two-command setup.
