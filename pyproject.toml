@@ -3,11 +3,11 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rover-high-level"
+name = "matrix_lab_rover_above"
 version = "0.1.0"
 description = "High-level AI agent code (ArUco tracking, YOLO detection, LLM hybrid, rover control) for the STEM Rovers"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "ollama",
@@ -20,4 +20,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["ArUco_detector", "LLM_hybrid", "YOLO_agent", "rover_control"]
+packages = ["ArUco_detector", "depth_anything_server", "LLM_hybrid", "YOLO_agent", "rover_control"]

@@ -57,4 +57,5 @@ finally:
 | [ArUco Maze Runner](examples/aruco_maze_runner.py) | Drives the rover through a list of ArUco tags in order, spinning in place to search for each next tag. |
 | [ArUco Maze Runner (Trapezoid)](examples/aruco_maze_runner_trapezoid.py) | Same maze, but looks once per tag then drives a planned trapezoidal speed curve instead of a continuous PID. |
 | [Encoder Readout](examples/encoder_readout.py) | Polls the rover for its wheel encoder counts over UDP (the `e` command) and prints the replies. |
+| [Local Camera + YOLO Estimation](examples/simple_yolo_distance_estimation.py) | Metric depth estimation using Depth-Anything-V3 from a YOLO bounding box for any given object |
 ------------------------------------------------------------------------------------------------------------------------------------------------

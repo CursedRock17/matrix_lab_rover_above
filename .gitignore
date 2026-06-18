@@ -222,3 +222,4 @@ models/
 logs/
 build/
 AGENTS.md
+token.env

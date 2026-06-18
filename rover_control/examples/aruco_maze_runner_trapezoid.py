@@ -29,14 +29,14 @@ class ArucoTrapezoidRunner(Rover):
     CRUISE_VELOCITY = 0.20       # top speed of the trapezoid (m/s), under the rover's MAX_VELOCITY
     ACCEL = 0.20                 # how fast the speed ramps up and down (m/s^2)
     CENTER_TOLERANCE_DEG = 7.0   # "semi-centered" enough to drive; also keeps each turn above a tiny-burst size
-    SEARCH_STEP_DEG = 45.0       # how far we turn to sweep for a tag we can't see
-    SETTLE_S = 0.35              # pause after a turn so the chassis stops moving before we look
+    SEARCH_STEP_DEG = 75.0       # how far we turn to sweep for a tag we can't see
+    SETTLE_S = 0.25              # pause after a turn so the chassis stops moving before we look
     CONFIRM_FRAMES = 5           # fresh frames (captured after we stopped) sampled per look
-    CONFIRM_MIN = 3              # tag must appear in at least this many fresh frames to trust the reading
+    CONFIRM_MIN = 2              # tag must appear in at least this many fresh frames to trust the reading
     BEARING_AGREE_DEG = 5.0      # fresh frames must agree within this bearing spread, or we sample again
-    MAX_LOOK_TRIES = 3           # sampling rounds before we give up and treat the tag as unsteady
-    GOAL_TOLERANCE_M = 0.08      # how close beyond the stop distance still counts as "reached"
-    MAX_APPROACH_TRIES = 4       # drive + re-verify attempts per tag (we drive open-loop, so we check)
+    MAX_LOOK_TRIES = 4           # sampling rounds before we give up and treat the tag as unsteady
+    GOAL_TOLERANCE_M = 0.05      # how close beyond the stop distance still counts as "reached"
+    MAX_APPROACH_TRIES = 5       # drive + re-verify attempts per tag (we drive open-loop, so we check)
     LOG = True                   # write a per-decision diagnostic CSV to logs/ (set False to disable)
 
     def __init__(self, stop_tolerance_m=0.25):

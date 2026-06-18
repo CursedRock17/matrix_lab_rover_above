@@ -20,14 +20,15 @@ This folder will showcase all of the higher level, AI-agent code that we'll use 
 
 1) Create a conda environment:
     ```bash
-    conda create -n rover_high_level python=3.12 
+    conda create -n rover_high_level python=3.10
     ```
 
 2) Activate the environment and install this project (run from this folder):
     ```bash
     conda activate rover_high_level
     # On a machine without an NVIDIA GPU, grab the small CPU-only torch first (saves ~6 GB)
-    python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    # python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
     python3 -m pip install -e .
     ```
 
@@ -44,6 +45,7 @@ This installs the project's folders (`ArUco_detector`, `YOLO_agent`, `LLM_hybrid
     - ArUco_detector/ : Provides simple OpenCV code that is able to read a still JPEG from a http address in the format (http://192.168.50.123:80/capture), look for ArUco tags with a given Dict and ID, then export the pose from that tag. Code is wrapped into an easily extendable class that can be distributed.
     - YOLO_agent/     : Provides simple Python code that uses YOLOv8n (downloaded locally) to recognize objects. It should also be written in an easily portable class for access in other classes.
     - LLM_hybrid/     : Provides ollama extension with the ollama API that can allow the downloading of a model to export context.
+    - depth_anything_server/ : Provides a standard server/client interface such that the ESP32 Rovers can interact with a CUDA-Enabled workstation by sending image frames and receiving a metric depth map from Depth-Anything-V3
     - rover_control/  : Provides a rover class that sends UDP commands at a given command rate which communicates with the STEM Rover firmware. This class is where we can drive the physical rover and access peripheral information (encoder counts), this where actual high-level rover code is executed from, seen in one of the examples, ArUco_detector and other folders should integrate their applications here.
         - examples/   : All of the runnable high-level processes live here - the other folders only hold the distributed classes they build on.
 ```
