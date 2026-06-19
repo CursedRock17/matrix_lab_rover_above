@@ -37,7 +37,7 @@ class ObjectFollower(Rover):
         
         # Instantiate your custom peak-isolated vision clients
         yolo_model_path = Path(__file__).resolve().parents[2] / "YOLO_agent" / "models" / "yolov8n.pt"
-        self.extractor = YOLOExtractor(model_path=yolo_model_path, imgsz=960, verbose=False)
+        self.extractor = YOLOExtractor(model_path=yolo_model_path, imgsz=640, verbose=False)
         self.client = RoverNavigationClient(server_url="http://" + self.SERVER_IP, verbose=False)
 
         # PID controllers matching your historical ArUco hardware configurations

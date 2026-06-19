@@ -2,14 +2,21 @@
 This folder connects the rover to Large Language Models running locally through [Ollama](https://docs.ollama.com/api/introduction). Instead of a purpose-built network like YOLO, these examples use general-purpose models that can answer open-ended questions about what the camera sees — and even decide how the rover should drive.
 
 ## Setup
-1) Install the Ollama server (one time). Either use the official installer, or unpack the standalone build into your home folder (no admin rights needed):
+1) Install the Ollama server (one time). The recommended method is the official one-line installer, which always fetches the latest release:
 ```bash
-curl -sL https://github.com/ollama/ollama/releases/download/v0.30.7/ollama-linux-amd64.tar.zst -o /tmp/ollama.tar.zst
+curl -fsSL https://ollama.com/install.sh | sh
+```
+If you cannot run the installer (no admin rights, or Windows), download the latest standalone build from the [Ollama releases page](https://github.com/ollama/ollama/releases/latest) and unpack it:
+```bash
+# Linux example — replace the filename with the latest release from the page above
+curl -sL https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64.tar.zst -o /tmp/ollama.tar.zst
 mkdir -p ~/.local/ollama && tar --zstd -xf /tmp/ollama.tar.zst -C ~/.local/ollama
 ```
 
 2) Start the server (leave it running in its own terminal):
 ```bash
+ollama serve                        # if installed via the official installer
+# or, for the standalone build:
 ~/.local/ollama/bin/ollama serve
 ```
 

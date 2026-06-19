@@ -43,7 +43,7 @@ class ArucoPoseEstimator:
         marker_length_m=marker_length_m_default,
         dictionary=cv2.aruco.DICT_4X4_250,
         alpha=0.25,
-        max_reprojection_error_px=4.0,
+        max_reprojection_error_px=6.0,
         verbose=False,
     ):
         ### Camera + system configuration ###
@@ -53,6 +53,7 @@ class ArucoPoseEstimator:
         self.http_addr = http_addr
         self.alpha = alpha
         # Reject a detected pose if its corners reproject more than this many pixels off (blurred/occluded)
+        # 6.0 px is a realistic threshold for JPEG-compressed frames from the ESP32 camera
         self.max_reprojection_error_px = max_reprojection_error_px
         self.verbose = verbose
 
@@ -62,6 +63,10 @@ class ArucoPoseEstimator:
         # Refine each detected corner to sub-pixel accuracy -> steadier, more precise pose
         detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
         self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, detector_params)
+
+        # CLAHE boosts local contrast before detection, helping under uneven classroom lighting
+        # and compensating for JPEG compression softening the marker edges
+        self._clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
         ### Marker corner positions in the marker's own frame (top-left, top-right, bottom-right, bottom-left) ###
         half = self.marker_length_m / 2.0
@@ -104,6 +109,7 @@ class ArucoPoseEstimator:
 
         ### Detect ArUco markers ###
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = self._clahe.apply(gray)
         corners, ids, _ = self.detector.detectMarkers(gray)
 
         poses = {}

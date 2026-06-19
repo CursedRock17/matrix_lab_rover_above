@@ -1,5 +1,5 @@
 # Depth-Anything-V3 Server
-The Purpose of this directory is to allow users to extract depth (in meters) from a depth map provided by [Depth-Anything-V3](https://depth-anything-3.github.io/). This repository contains local examples and provides the capability to turn any CUDA-enabled machine to turn into a server which handles only images in a LIFO (Last-In, First-Out) style stack. This is done to host a variety of ESP32s capable of communicating with the server.
+The purpose of this directory is to allow users to extract depth (in meters) from a depth map provided by [Depth-Anything-V3](https://depth-anything-3.github.io/). This folder contains local examples and provides the capability to turn any CUDA-enabled machine into a server that handles depth inference requests in a FIFO (First-In, First-Out) queue. This is done to serve a variety of rover laptops capable of communicating with the server over the local network.
 
 ## Requirements
 This package assumes you've installed previous packages for the main rover code. You'll also need
@@ -14,14 +14,47 @@ The following models provided by DA3 can actually produce a precise metric depth
 You can view the implementation of the Server/Client Setup on the local network here:
 ![Architecture Implementation](resources/Depth\ Anything\ Server\ Architecture.drawio.png)
 
-Each of the **Rover Implementations** serve as a general box for any student looking to have and control a rover. That box can be copied with its inputs and outputs independtly of over devices. The impact of adding a new rover implementation is 3 more IPs on the local network and one more device capable of adding images to the server LIFO stack.
+Each of the **Rover Implementations** serves as a self-contained unit for any student controlling a rover. That box can be copied with its inputs and outputs independently of other devices. The impact of adding a new rover implementation is 3 more IPs on the local network and one more device capable of submitting frames to the server queue.
+
+## Quick Start
+
+Once the server machine is set up (see Requirements above), two terminals are all you need:
+
+**Terminal 1 — desktop (GPU machine):**
+```bash
+python depth_anything_server/depth_server.py
+```
+
+**Terminal 2 — any laptop on the same network:**
+```bash
+python depth_anything_server/depth_client.py --server http://<DESKTOP_IP>:5000
+```
+
+The client sends one frame and opens a side-by-side window showing the original image and its depth map.
+
+### Using it in your own code
+```python
+from depth_anything_server.depth_client import RoverNavigationClient
+
+client = RoverNavigationClient(server_url="http://192.168.50.155:5000")
+
+frame = client.fetch_rover_frame("192.168.50.123:80")  # grab a frame from the rover camera
+depth = client.get_metric_depth(frame)                 # float32 depth map in meters
+dist  = client.get_object_distance(yolo_box, depth)    # distance to a YOLO bounding box
+
+print(f"Object is {dist:.2f} m away")
+```
+
+For full rover control loop examples, see [rover_control/examples/](../rover_control/examples/).
+
+---
 
 ## Examples
 This directory has multiple implementations of the Depth-Anything-V3 Metric Depth Map API including:
 - [Local Camera](./examples/depth_map_local_camera.py) metric depth map visualization, side-by-side with the actual image. Connect a USB Webcam and go.
 - [Simple Client & Server](./examples/simple_client_server_example.py) metric depth estimation of center pixel from network based camera.
 
-### Rational
+### Rationale
 This part serves as thought process behind some of the implementations:
 
 **YOLO + DA3 Server**

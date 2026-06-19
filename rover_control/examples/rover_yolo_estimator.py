@@ -110,7 +110,7 @@ def save_silent_histogram(box_depths, filtered_pixels, final_dist, obj_name):
 
 
 if __name__ == "__main__":
-    extractor = YOLOExtractor(model_path=yolo_model_path, imgsz=960, verbose=False)
+    extractor = YOLOExtractor(model_path=yolo_model_path, imgsz=640, verbose=False)
     client = RoverNavigationClient(server_url="http://" + SERVER_IP, verbose=False)
 
     print("\n====================================================")

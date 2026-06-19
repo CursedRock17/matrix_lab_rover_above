@@ -11,6 +11,9 @@ class Rover():
     COMMAND_RATE_HZ = 10.0  # the rover firmware listens for commands at about this rate
     MAX_VELOCITY = 0.25  # m/s
     MIN_VELOCITY = 0.075  # m/s
+    # Open-loop turns are timed, not encoder-measured, so they can under- or overshoot.
+    # If turns consistently land short, increase this (e.g. 1.5 if turns are ~30% short).
+    TURN_SCALE = 1.0
 
     # --- Settings for the simple one-line behaviors (drive_to_tag, run_maze, ...) ---
     DEFAULT_CAMERA_ADDR = "http://192.168.50.123:80/capture"
@@ -115,7 +118,7 @@ class Rover():
 
         # Spinning at the stall-floor speed, the rover turns at this rate, so this long covers `degrees`
         omega = 2.0 * self.MIN_VELOCITY / self.wheel_separation
-        end_time = time.perf_counter() + np.radians(abs(degrees)) / omega
+        end_time = time.perf_counter() + np.radians(abs(degrees) * self.TURN_SCALE) / omega
         try:
             while time.perf_counter() < end_time:
                 self.write_real_velocities([left, right])
@@ -227,7 +230,7 @@ class Rover():
             from YOLO_agent.yolo_pose_estimator import YOLOPoseEstimator
             model_path = Path(__file__).resolve().parents[1] / "YOLO_agent" / "models" / "yolov8n.pt"
             # imgsz=960 sees smaller/farther objects; the depth pass makes this a slow (~1 Hz) look
-            self._yolo_estimator = YOLOPoseEstimator(model_path=model_path, imgsz=960, verbose=self.show_camera)
+            self._yolo_estimator = YOLOPoseEstimator(model_path=model_path, imgsz=640, verbose=self.show_camera)
         return self._yolo_estimator
 
     def _see_object(self, yolo, name):

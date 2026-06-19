@@ -1,5 +1,6 @@
-# Rover High Level
-This folder will showcase all of the higher level, AI-agent code that we'll use with the STEM Rovers
+# Matrix Lab Rover — High Level
+This repository contains the higher-level AI agent code for the STEM Rovers: object detection, ArUco pose estimation, LLM integration, and the control loops that tie them together into autonomous behaviours.
+The intent is to elevate the basic differential drive rover platform we're currently control with closed loop techniques, with modern neural network, higher level algorithms.
 
 ## Installation
 
@@ -41,22 +42,36 @@ This installs the project's folders (`ArUco_detector`, `YOLO_agent`, `LLM_hybrid
 ## Project Structure
 
 ```
-- rover_high_level/
-    - ArUco_detector/ : Provides simple OpenCV code that is able to read a still JPEG from a http address in the format (http://192.168.50.123:80/capture), look for ArUco tags with a given Dict and ID, then export the pose from that tag. Code is wrapped into an easily extendable class that can be distributed.
-    - YOLO_agent/     : Provides simple Python code that uses YOLOv8n (downloaded locally) to recognize objects. It should also be written in an easily portable class for access in other classes.
-    - LLM_hybrid/     : Provides ollama extension with the ollama API that can allow the downloading of a model to export context.
-    - depth_anything_server/ : Provides a standard server/client interface such that the ESP32 Rovers can interact with a CUDA-Enabled workstation by sending image frames and receiving a metric depth map from Depth-Anything-V3
-    - rover_control/  : Provides a rover class that sends UDP commands at a given command rate which communicates with the STEM Rover firmware. This class is where we can drive the physical rover and access peripheral information (encoder counts), this where actual high-level rover code is executed from, seen in one of the examples, ArUco_detector and other folders should integrate their applications here.
-        - examples/   : All of the runnable high-level processes live here - the other folders only hold the distributed classes they build on.
+matrix_lab_rover_above/
+├── ArUco_detector/          OpenCV-based ArUco marker detector. Reads a JPEG still from the
+│                            ESP32 camera, finds any markers from a chosen dictionary, and
+│                            returns each tag's (X, Y, Z) pose in meters.
+├── YOLO_agent/              YOLOv8n object detector for COCO classes, plus a monocular depth
+│                            estimator that pairs YOLO bounding boxes with Depth Anything V3
+│                            to produce real-world (X, Y, Z) positions with no tag required.
+├── LLM_hybrid/              Ollama integration for local vision LLMs. Can describe what the
+│                            camera sees and output rover velocity commands as structured JSON.
+├── depth_anything_server/   FastAPI server that offloads Depth Anything V3 inference to a
+│                            shared desktop GPU. Rover laptops send a JPEG frame over HTTP and
+│                            receive a full float32 depth map in return.
+└── rover_control/           Rover base class and all runnable examples. Sends motor commands
+        └── examples/        over UDP at 10 Hz and reads encoder counts over the same link.
+                             All other folders are imported here — this is where students run code.
 ```
 
 ---
 
 ## Examples
-- ArUco Marker Pose Estimation : Extract OpenCV streamed camera data, find an ArUco marker with a certain dictionary ID, extract pose from it. Export that pose to a twist
-- YOLO Object Detection : Run YOLOv8n on your laptop camera or the rover's ESP32 camera and get back simple detection dictionaries (see YOLO_agent/)
-- YOLO 3D Pose : Add a real-world (X, Y, Z) position in meters to each YOLO detection with a monocular depth model (see YOLO_agent/)
-- YOLO Object Navigation : Drive the rover toward a named COCO object using its YOLO 3D pose (see rover_control/examples/)
-- ArUco Tag Tracking : Keep tracking a moving ArUco tag at a fixed standoff distance (see rover_control/examples/)
-- LLM Object Identification : Ask a local vision LLM what object is in frame and get a structured JSON answer (see LLM_hybrid/)
-- LLM Rover Driving : Proof of concept where the LLM looks for a target object in the camera stream and emits the rover's velocity JSON message (see LLM_hybrid/)
+
+| Example | Folder | What it does |
+|---------|--------|-------------|
+| ArUco Pose Movement | [rover_control/examples/](rover_control/examples/) | Finds an ArUco tag, centers on it, and drives to ~0.25 m away. |
+| ArUco Maze Runner | [rover_control/examples/](rover_control/examples/) | Navigates a sequence of ArUco tags in order using a continuous PID approach. |
+| ArUco Maze Runner (Trapezoid) | [rover_control/examples/](rover_control/examples/) | Same maze, but uses a planned trapezoidal speed curve — more reliable in poor lighting. |
+| ArUco Tag Tracker | [rover_control/examples/](rover_control/examples/) | Keeps a moving ArUco tag in frame at a fixed standoff distance, spinning to find it if lost. |
+| YOLO Object Detection | [YOLO_agent/](YOLO_agent/) | Runs YOLOv8n on the laptop camera or ESP32 camera and returns detection dictionaries. |
+| YOLO 3D Pose | [YOLO_agent/](YOLO_agent/) | Pairs YOLO detections with a depth model to give each object a real-world (X, Y, Z) position. |
+| YOLO Object Navigation | [rover_control/examples/](rover_control/examples/) | Drives the rover toward a named COCO object using its YOLO 3D pose. |
+| Depth Server | [depth_anything_server/](depth_anything_server/) | Offloads Depth Anything V3 inference to a desktop GPU; laptops send a JPEG and get a depth map back. |
+| LLM Object Identification | [LLM_hybrid/](LLM_hybrid/) | Asks a local vision LLM what object is in frame and returns a structured JSON answer. |
+| LLM Rover Driving | [LLM_hybrid/](LLM_hybrid/) | Proof of concept where the LLM watches the camera stream and outputs rover velocity commands. |

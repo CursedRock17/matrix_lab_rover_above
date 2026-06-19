@@ -104,7 +104,7 @@ class ArucoRunner(Rover):
         # Spin the rover on the spot by a number of degrees (open-loop, timed at the stall-floor speed)
         # direction: +1 turns toward the tag's right (+X), -1 turns left
         omega = 2.0 * self.MIN_VELOCITY / self.wheel_separation
-        spin_time = np.radians(degrees) / omega
+        spin_time = np.radians(degrees * self.TURN_SCALE) / omega
         spin = conversions.convert_linear_vel_to_angular_vel(self.MIN_VELOCITY, self.wheel_diameter / 2.0)
 
         # Snapshot encoder counts before the turn so we can measure actual rotation afterward

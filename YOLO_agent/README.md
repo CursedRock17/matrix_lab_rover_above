@@ -23,3 +23,6 @@ The best way to get started is by running the [local camera example](yolov8n_loc
 | [YOLO ESP32 Camera](examples/yolov8n_esp32_example.py) | Runs YOLOv8n object detection on JPEG stills polled from the rover's ESP32 camera. |
 | [YOLO 3D Pose](examples/yolov8n_pose_example.py) | Adds a real-world (X, Y, Z) position in meters to every detection using a monocular depth model. |
 
+## GPU Depth Server
+For real-time metric depth on the rover, offload inference to a desktop GPU via the depth server. See [depth_anything_server/](../depth_anything_server/) for setup, the client API, and examples.
+
