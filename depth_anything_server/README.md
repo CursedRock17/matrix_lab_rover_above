@@ -12,7 +12,7 @@ The following models provided by DA3 can actually produce a precise metric depth
 
 ## Architecture
 You can view the implementation of the Server/Client Setup on the local network here:
-![Architecture Implementation](resources/Depth\ Anything\ Server\ Architecture.drawio.png)
+![Architecture Implementation]("./resources/Depth Anything Server Architecture.drawio.png")
 
 Each of the **Rover Implementations** serves as a self-contained unit for any student controlling a rover. That box can be copied with its inputs and outputs independently of other devices. The impact of adding a new rover implementation is 3 more IPs on the local network and one more device capable of submitting frames to the server queue.
 
