@@ -9,6 +9,7 @@ PID velocity wheels tracking to follow an object (e.g., a person).
 import cv2
 import numpy as np
 import time
+import threading
 from pathlib import Path
 
 # Local Core Rover Framework
@@ -19,6 +20,43 @@ from rover_control.pid import PID
 # Local Network Client & Vision Pipelines
 from depth_anything_server.depth_client import RoverNavigationClient
 from YOLO_agent.YOLO_extractor import YOLOExtractor
+
+
+class DepthWorker:
+    """
+    Background thread that continuously fetches frames and depth maps so the
+    control loop never blocks waiting for GPU inference (~250 ms per call).
+    The main loop calls latest() to get the most recent frame+depth pair instantly.
+    """
+    def __init__(self, client: RoverNavigationClient, rover_ip: str):
+        self._client = client
+        self._rover_ip = rover_ip
+        self._lock = threading.Lock()
+        self._frame = None
+        self._depth = None
+        self._running = True
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _run(self):
+        while self._running:
+            frame = self._client.fetch_rover_frame(self._rover_ip)
+            if frame is None:
+                time.sleep(0.05)
+                continue
+            depth = self._client.get_metric_depth(frame)
+            with self._lock:
+                self._frame = frame
+                self._depth = depth
+
+    def latest(self):
+        """Returns (frame, depth_map) — both from the same capture, never blocking."""
+        with self._lock:
+            return self._frame, self._depth
+
+    def stop(self):
+        self._running = False
+
 
 class ObjectFollower(Rover):
     TARGET_CLASS      = "person"  # Target item label to track and follow
@@ -39,6 +77,7 @@ class ObjectFollower(Rover):
         yolo_model_path = Path(__file__).resolve().parents[2] / "YOLO_agent" / "models" / "yolov8n.pt"
         self.extractor = YOLOExtractor(model_path=yolo_model_path, imgsz=640, verbose=False)
         self.client = RoverNavigationClient(server_url="http://" + self.SERVER_IP, verbose=False)
+        self._depth_worker = DepthWorker(self.client, self.ROVER_CAMERA_IP)
 
         # PID controllers matching your historical ArUco hardware configurations
         self.distance_pid = PID(kp=0.75, ki=0.10, kd=0.15, output_limit=self.MAX_VELOCITY)
@@ -103,22 +142,21 @@ class ObjectFollower(Rover):
 
         try:
             while True:
-                frame = self.client.fetch_rover_frame(self.ROVER_CAMERA_IP)
+                # Non-blocking — depth worker keeps this fresh in the background
+                frame, depth_map = self._depth_worker.latest()
                 if frame is None:
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                     continue
 
                 h, w, c = frame.shape
                 annotated, detections = self.extractor.process(frame)
-                
+
                 # Filter out the specific target type
                 valid_targets = [d for d in detections if d['name'] == self.TARGET_CLASS and d['confidence'] > self.CONFIDENCE_THRESH]
 
                 wheel_speeds = [0.0, 0.0]  # Default to zero velocity state if empty
 
                 if len(valid_targets) > 0:
-                    depth_map = self.client.get_metric_depth(frame)
-                    
                     if depth_map is not None:
                         # Process first matching prioritized target
                         target = valid_targets[0]
@@ -171,6 +209,7 @@ class ObjectFollower(Rover):
         except KeyboardInterrupt:
             print("\nManual override interception. Commencing soft stop sequence.")
         finally:
+            self._depth_worker.stop()
             self.stop()
             cv2.destroyAllWindows()
 

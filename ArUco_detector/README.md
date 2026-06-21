@@ -110,12 +110,5 @@ This is a frame-timing issue. `ArucoPoseEstimator` gates frames by timestamp —
 The camera is not calibrated, or the calibration file path is incorrect. Verify that `camera_matrix` and `dist_coeffs` are loaded from the `.yaml` file in `calibration/` and not left at their defaults.
 
 **Poor detection under classroom lighting or after JPEG compression**
-The ESP32-Cam's default JPEG quality is heavily compressed, which blurs marker edges. If the camera firmware exposes HTTP control endpoints (common on AI-Thinker modules), try raising quality and locking exposure before running:
-```bash
-curl "http://192.168.50.123/control?var=quality&val=6"    # lower number = higher quality
-curl "http://192.168.50.123/control?var=awb&val=0"        # disable auto white balance
-curl "http://192.168.50.123/control?var=aec&val=0"        # disable auto exposure
-curl "http://192.168.50.123/control?var=aec_value&val=400"
-```
-These endpoints may not exist on all camera firmware builds — check with a browser first.
+Camera settings (JPEG quality, brightness, exposure) are compile-time constants in the rover firmware — there is no HTTP control endpoint to change them at runtime. If detection is consistently poor, the fix is to update the relevant constants in `rover_camera_firmware/` and reflash the affected rovers. The settings to look at are `STREAM_QUALITY` (lower = better JPEG quality), `set_brightness`, `set_contrast`, and `set_ae_level` in the camera init block.
 
